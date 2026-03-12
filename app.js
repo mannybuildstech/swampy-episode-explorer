@@ -61,7 +61,15 @@ const manualEpisodeLocations = {
   }
 };
 
+const titleAliases = {
+  'spring portal': 'spring portal episode 1',
+  'mooshoo and the stolen pontoon': 'mushu and the stolen pontoon',
+  'silver springs showdown': 'silver spring showdown',
+  'raspy ft rafa': 'raspy'
+};
+
 const fallbackImage = 'https://placehold.co/300x300?text=Swampy+Stories';
+const geocodeCache = new Map();
 let markers = [];
 
 function textFromHtml(html = '') {
@@ -157,9 +165,43 @@ function extractImage(item) {
 function normalizeTitle(title) {
   return title
     .toLowerCase()
-    .replace(/[^a-z0-9\s']/g, '')
+    .replace(/[^a-z0-9\s']/g, ' ')
+    .replace(/\bft\b.*$/g, '')
     .replace(/\s+/g, ' ')
     .trim();
+}
+
+function resolveLocationForTitle(title) {
+  const normalized = normalizeTitle(title);
+  const canonical = titleAliases[normalized] || normalized;
+  return manualEpisodeLocations[canonical] || null;
+}
+
+async function geocodePlace(place) {
+  if (!place) return null;
+  if (geocodeCache.has(place)) return geocodeCache.get(place);
+
+  const url = `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(place)}`;
+  try {
+    const response = await fetch(url, {
+      headers: {
+        Accept: 'application/json'
+      }
+    });
+    if (!response.ok) {
+      geocodeCache.set(place, null);
+      return null;
+    }
+
+    const results = await response.json();
+    const match = results?.[0];
+    const coords = match ? [Number(match.lat), Number(match.lon)] : null;
+    geocodeCache.set(place, coords);
+    return coords;
+  } catch {
+    geocodeCache.set(place, null);
+    return null;
+  }
 }
 
 function clearMarkers() {
@@ -217,11 +259,10 @@ async function loadEpisodes() {
     const doc = new DOMParser().parseFromString(xml, 'text/xml');
     const items = [...doc.getElementsByTagName('item')];
 
-    const episodes = items
-      .map(item => {
+    const episodes = (await Promise.all(
+      items.map(async item => {
         const title = item.getElementsByTagName('title')[0]?.textContent?.trim() || 'Untitled';
-        const key = normalizeTitle(title);
-        const location = manualEpisodeLocations[key];
+        const location = resolveLocationForTitle(title);
         if (!location) return null;
 
         const rawDescription = item.getElementsByTagName('description')[0]?.textContent || '';
@@ -248,7 +289,7 @@ async function loadEpisodes() {
           preferredUrl
         };
       })
-      .filter(Boolean);
+    )).filter(Boolean);
 
     for (const episode of episodes) {
       renderEpisode(episode);
