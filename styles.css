@@ -1,0 +1,140 @@
+:root {
+  color-scheme: light dark;
+  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: #0f172a;
+  color: #e2e8f0;
+}
+
+header {
+  padding: 0.8rem 1rem;
+  background: #111827;
+  border-bottom: 1px solid #1f2937;
+  display: grid;
+  gap: 0.45rem;
+}
+
+header h1 {
+  margin: 0;
+  font-size: 1.4rem;
+}
+
+header p {
+  margin: 0;
+}
+
+button {
+  width: fit-content;
+  padding: 0.55rem 0.9rem;
+  border: 0;
+  border-radius: 0.5rem;
+  background: #10b981;
+  color: #04130e;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+main {
+  display: grid;
+  grid-template-columns: 1fr;
+  min-height: calc(100vh - 140px);
+}
+
+main.with-pane {
+  grid-template-columns: minmax(0, 2fr) minmax(320px, 1fr);
+}
+
+#map {
+  width: 100%;
+  min-height: calc(100vh - 140px);
+}
+
+#episodePane {
+  border-left: 1px solid #1f2937;
+  padding: 1rem;
+  overflow-y: auto;
+  background: #020617;
+}
+
+.hidden {
+  display: none;
+}
+
+#episodeList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.episode-card {
+  background: #0f172a;
+  border: 1px solid #1e293b;
+  border-radius: 0.6rem;
+  padding: 0.6rem;
+  display: grid;
+  grid-template-columns: 92px 1fr;
+  gap: 0.7rem;
+}
+
+.episode-image {
+  width: 92px;
+  height: 92px;
+  object-fit: cover;
+  border-radius: 0.4rem;
+  border: 1px solid #334155;
+}
+
+.episode-title {
+  margin: 0 0 0.35rem;
+  font-size: 1rem;
+}
+
+.episode-location {
+  margin: 0;
+  color: #34d399;
+  font-weight: 600;
+}
+
+.episode-description {
+  margin: 0.4rem 0 0;
+  font-size: 0.85rem;
+  color: #cbd5e1;
+  display: -webkit-box;
+  -webkit-line-clamp: 6;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.episode-pin {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border: 3px solid #10b981;
+  box-shadow: 0 5px 16px rgba(0, 0, 0, 0.45);
+  object-fit: cover;
+}
+
+.leaflet-div-icon {
+  border: 0;
+  background: transparent;
+}
+
+@media (max-width: 960px) {
+  main.with-pane {
+    grid-template-columns: 1fr;
+  }
+
+  #episodePane {
+    border-left: 0;
+    border-top: 1px solid #1f2937;
+  }
+}
