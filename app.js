@@ -275,15 +275,14 @@ async function loadEpisodes() {
           spotifyUrl: links.spotify,
           fallbackUrl: links.fallback
         });
-        const place = parsedLocation?.place || location.place;
-        const geocodedCoords = parsedLocation ? await geocodePlace(place) : null;
 
         return {
           title,
           description,
           image,
-          place,
-          coords: geocodedCoords || location.coords,
+          place: parsedLocation?.place || location.place,
+          parsedAddress: parsedLocation?.address || '',
+          coords: location.coords,
           appleUrl: links.apple,
           spotifyUrl: links.spotify,
           fallbackUrl: links.fallback,
