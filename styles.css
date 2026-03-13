@@ -106,7 +106,12 @@ main {
   border: 1px solid transparent;
 }
 
-.popup-button-primary,
+.popup-button-primary {
+  background: #2563eb;
+  color: #eff6ff;
+  border-color: #3b82f6;
+}
+
 .popup-button-secondary {
   background: #0f172a;
   color: #cbd5e1;
