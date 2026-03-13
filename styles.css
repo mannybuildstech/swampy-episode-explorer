@@ -14,111 +14,44 @@ body {
 }
 
 header {
-  padding: 0.8rem 1rem;
+  padding: 0.75rem 1rem;
   background: #111827;
   border-bottom: 1px solid #1f2937;
-  display: grid;
-  gap: 0.45rem;
 }
 
 header h1 {
   margin: 0;
-  font-size: 1.4rem;
-}
-
-header p {
-  margin: 0;
-}
-
-button {
-  width: fit-content;
-  padding: 0.55rem 0.9rem;
-  border: 0;
-  border-radius: 0.5rem;
-  background: #10b981;
-  color: #04130e;
-  font-weight: 700;
-  cursor: pointer;
+  font-size: clamp(1.1rem, 4.5vw, 1.4rem);
+  text-align: center;
 }
 
 main {
+  min-height: calc(100dvh - 62px);
   display: grid;
-  grid-template-columns: 1fr;
-  min-height: calc(100vh - 140px);
+  grid-template-rows: auto 1fr;
 }
 
-main.with-pane {
-  grid-template-columns: minmax(0, 2fr) minmax(320px, 1fr);
+#status {
+  margin: 0;
+  padding: 0.55rem 0.8rem;
+  font-size: 0.88rem;
+  color: #bfdbfe;
+  background: #020617;
+  border-bottom: 1px solid #1f2937;
+  min-height: 2.2rem;
 }
 
 #map {
   width: 100%;
-  min-height: calc(100vh - 140px);
-}
-
-#episodePane {
-  border-left: 1px solid #1f2937;
-  padding: 1rem;
-  overflow-y: auto;
-  background: #020617;
-}
-
-.hidden {
-  display: none;
-}
-
-#episodeList {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  gap: 0.75rem;
-}
-
-.episode-card {
-  background: #0f172a;
-  border: 1px solid #1e293b;
-  border-radius: 0.6rem;
-  padding: 0.6rem;
-  display: grid;
-  grid-template-columns: 92px 1fr;
-  gap: 0.7rem;
-}
-
-.episode-image {
-  width: 92px;
-  height: 92px;
-  object-fit: cover;
-  border-radius: 0.4rem;
-  border: 1px solid #334155;
-}
-
-.episode-title {
-  margin: 0 0 0.35rem;
-  font-size: 1rem;
-}
-
-.episode-location {
-  margin: 0;
-  color: #34d399;
-  font-weight: 600;
-}
-
-.episode-description {
-  margin: 0.4rem 0 0;
-  font-size: 0.85rem;
-  color: #cbd5e1;
-  display: -webkit-box;
-  -webkit-line-clamp: 6;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+  height: 100%;
+  min-height: 0;
 }
 
 .episode-pin {
   width: 52px;
   height: 52px;
   border-radius: 50%;
-  border: 3px solid #10b981;
+  border: 3px solid #22c55e;
   box-shadow: 0 5px 16px rgba(0, 0, 0, 0.45);
   object-fit: cover;
 }
@@ -128,13 +61,74 @@ main.with-pane {
   background: transparent;
 }
 
-@media (max-width: 960px) {
-  main.with-pane {
-    grid-template-columns: 1fr;
+.popup-card {
+  background: #111827;
+  color: #f8fafc;
+  border: 1px solid #334155;
+  border-radius: 0.5rem;
+  padding: 0.65rem;
+}
+
+.popup-card h3 {
+  margin: 0;
+  color: #ffffff;
+  font-size: 1rem;
+}
+
+.popup-location {
+  margin: 0.35rem 0;
+  color: #86efac;
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.popup-description {
+  margin: 0;
+  color: #e2e8f0;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.popup-actions {
+  margin-top: 0.7rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.popup-button {
+  display: inline-block;
+  padding: 0.48rem 0.78rem;
+  border-radius: 0.5rem;
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 0.85rem;
+  border: 1px solid transparent;
+}
+
+.popup-button-primary {
+  background: #2563eb;
+  color: #eff6ff;
+  border-color: #3b82f6;
+}
+
+.popup-button-secondary {
+  background: #0f172a;
+  color: #cbd5e1;
+  border-color: #475569;
+}
+
+@media (max-width: 640px) {
+  header {
+    padding: 0.65rem 0.85rem;
   }
 
-  #episodePane {
-    border-left: 0;
-    border-top: 1px solid #1f2937;
+  #status {
+    padding: 0.5rem 0.65rem;
+    font-size: 0.8rem;
+  }
+
+  .leaflet-popup-content {
+    margin: 10px 12px;
   }
 }
