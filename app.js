@@ -23,6 +23,10 @@ const manualEpisodeLocations = {
     place: 'Kelly Park, Apopka, Florida',
     coords: [28.7612, -81.5030]
   },
+  'spring portal': {
+    place: 'Kelly Park, Apopka, Florida',
+    coords: [28.7612, -81.5030]
+  },
   'bread heist': {
     place: 'Moss Park, Kissimmee, Florida',
     coords: [28.3461, -81.1576]
@@ -36,6 +40,10 @@ const manualEpisodeLocations = {
     coords: [28.0718, -82.8258]
   },
   'mushu and the stolen pontoon': {
+    place: 'Blue Spring State Park, Orange City, Florida',
+    coords: [28.9459, -81.3399]
+  },
+  'mooshoo and the stolen pontoon': {
     place: 'Blue Spring State Park, Orange City, Florida',
     coords: [28.9459, -81.3399]
   },
@@ -54,6 +62,10 @@ const manualEpisodeLocations = {
   'the magic acorn': {
     place: "Tucker's Ranch, Winter Garden, Florida",
     coords: [28.5737, -81.5949]
+  },
+  'silver springs showdown': {
+    place: 'Silver Springs State Park, Ocala, Florida',
+    coords: [29.2098, -82.0223]
   },
   'silver spring showdown': {
     place: 'Silver Springs State Park, Ocala, Florida',
@@ -83,18 +95,39 @@ function textWithLineBreaksFromHtml(html = '') {
     .trim();
 }
 
-function parseBasedOnLocation(rawDescription = '') {
-  const text = textWithLineBreaksFromHtml(rawDescription);
-  const paragraphs = text
-    .split(/\n\n+/)
-    .map(part => part.trim())
-    .filter(Boolean);
-  const lastParagraph = paragraphs.at(-1) || '';
-  const lines = lastParagraph
+function parseBasedOnLocation(...rawParts) {
+  const merged = rawParts.filter(Boolean).join("\n");
+  const text = textWithLineBreaksFromHtml(merged);
+
+  const inlinePattern = /Based on\s+location:\s*([^\n,]+?)\s*,\s*([^\n]+)/i;
+  const inlineMatch = text.match(inlinePattern);
+  if (inlineMatch) {
+    const locationTitle = inlineMatch[1].trim();
+    const locationAddress = inlineMatch[2].trim();
+    return {
+      title: locationTitle,
+      address: locationAddress,
+      place: `${locationTitle}, ${locationAddress}`
+    };
+  }
+
+  const labelPattern = /Based on\s+location:\s*(.+?)\s*(?:Address|Location address)[:\-]\s*([^\n]+)/i;
+  const labelMatch = text.match(labelPattern);
+  if (labelMatch) {
+    const locationTitle = labelMatch[1].trim();
+    const locationAddress = labelMatch[2].trim();
+    return {
+      title: locationTitle,
+      address: locationAddress,
+      place: `${locationTitle}, ${locationAddress}`
+    };
+  }
+
+  const lines = text
     .split('\n')
     .map(line => line.trim())
     .filter(Boolean);
-  const locationLine = lines.findIndex(line => /^Based on location:\s*$/i.test(line));
+  const locationLine = lines.findIndex(line => /^Based on\s+location:\s*$/i.test(line));
 
   if (locationLine === -1) return null;
 
@@ -157,9 +190,38 @@ function extractImage(item) {
 function normalizeTitle(title) {
   return title
     .toLowerCase()
+    .replace(/\(ft\.?[^)]*\)/g, '')
+    .replace(/\bft\.?\s+[^-–—|]+$/g, '')
     .replace(/[^a-z0-9\s']/g, '')
     .replace(/\s+/g, ' ')
     .trim();
+}
+
+function resolveEpisodeLocation(title) {
+  const normalized = normalizeTitle(title);
+  if (manualEpisodeLocations[normalized]) {
+    return { key: normalized, location: manualEpisodeLocations[normalized] };
+  }
+
+  const aliases = [
+    ['silver spring showdown', 'silver springs showdown'],
+    ['mushu and the stolen pontoon', 'mooshoo and the stolen pontoon'],
+    ['spring portal episode 1', 'spring portal'],
+    ['raspy', 'raspy ft rafa']
+  ];
+
+  for (const [manualKey, candidateKey] of aliases) {
+    if (normalized === candidateKey || normalized.includes(candidateKey)) {
+      return { key: manualKey, location: manualEpisodeLocations[manualKey] };
+    }
+  }
+
+  const fuzzyMatch = Object.keys(manualEpisodeLocations).find(key => normalized.includes(key));
+  if (fuzzyMatch) {
+    return { key: fuzzyMatch, location: manualEpisodeLocations[fuzzyMatch] };
+  }
+
+  return { key: normalized, location: null };
 }
 
 function clearMarkers() {
@@ -216,17 +278,32 @@ async function loadEpisodes() {
     const xml = await fetchXml();
     const doc = new DOMParser().parseFromString(xml, 'text/xml');
     const items = [...doc.getElementsByTagName('item')];
+    console.log('[Swampy] Feed items retrieved:', items.length);
+
+    const seenTitles = new Set();
 
     const episodes = items
       .map(item => {
         const title = item.getElementsByTagName('title')[0]?.textContent?.trim() || 'Untitled';
-        const key = normalizeTitle(title);
-        const location = manualEpisodeLocations[key];
-        if (!location) return null;
+        const normalizedTitle = normalizeTitle(title);
+
+        if (seenTitles.has(normalizedTitle)) {
+          console.log('[Swampy] Skipping duplicate episode:', title);
+          return null;
+        }
+        seenTitles.add(normalizedTitle);
+
+        const { key, location } = resolveEpisodeLocation(title);
+        if (!location) {
+          console.warn('[Swampy] No location match for episode:', { title, normalizedTitle, key });
+          return null;
+        }
 
         const rawDescription = item.getElementsByTagName('description')[0]?.textContent || '';
-        const parsedLocation = parseBasedOnLocation(rawDescription);
-        const links = extractPlatformLinks(item, rawDescription);
+        const contentEncoded = item.getElementsByTagName('content:encoded')[0]?.textContent || '';
+        const summary = item.getElementsByTagName('itunes:summary')[0]?.textContent || '';
+        const parsedLocation = parseBasedOnLocation(rawDescription, contentEncoded, summary);
+        const links = extractPlatformLinks(item, [rawDescription, contentEncoded, summary].join(' '));
         const description = textFromHtml(rawDescription).slice(0, 420);
         const image = extractImage(item);
         const preferredUrl = preferredEpisodeUrl({
@@ -234,6 +311,21 @@ async function loadEpisodes() {
           spotifyUrl: links.spotify,
           fallbackUrl: links.fallback
         });
+
+        console.log('[Swampy] Episode parsed:', {
+          title,
+          matchedLocationKey: key,
+          parsedAddress: parsedLocation?.address || '(not parsed)',
+          fallbackPlace: location.place
+        });
+
+        if (!parsedLocation) {
+          const rawText = textWithLineBreaksFromHtml([rawDescription, contentEncoded, summary].join('\n'));
+          console.warn('[Swampy] Could not parse `Based on location` block from feed text:', {
+            title,
+            tailPreview: rawText.slice(-260)
+          });
+        }
 
         return {
           title,
@@ -249,6 +341,8 @@ async function loadEpisodes() {
         };
       })
       .filter(Boolean);
+
+    console.log('[Swampy] Total mapped episodes after filtering:', episodes.length);
 
     for (const episode of episodes) {
       renderEpisode(episode);
