@@ -1,7 +1,5 @@
 const FEED_URL = 'https://feed.podbean.com/swampystories/feed.xml';
 
-const statusEl = document.getElementById('status');
-
 const map = L.map('map', {
   zoomControl: true,
   minZoom: 6,
@@ -244,7 +242,6 @@ async function fetchXml() {
 }
 
 async function loadEpisodes() {
-  statusEl.textContent = 'Loading episodes…';
   clearMarkers();
 
   try {
@@ -301,11 +298,10 @@ async function loadEpisodes() {
       map.fitBounds(group.getBounds().pad(0.2));
     }
 
-    statusEl.textContent = '';
     console.log(`[Swampy] Loaded ${episodes.length} mapped episodes.`);
   } catch (error) {
     console.error(error);
-    statusEl.textContent = `Failed to load feed: ${error.message}`;
+    console.error(`Failed to load feed: ${error.message}`);
   }
 }
 
