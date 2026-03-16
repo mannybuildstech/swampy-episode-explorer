@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>River Rescue Prototype</title>
+    <link rel="stylesheet" href="game.css" />
+  </head>
+  <body>
+    <main class="game-shell">
+      <header class="game-header">
+        <h1>River Rescue Prototype</h1>
+        <p>Move the kayak with <strong>← →</strong> or <strong>A D</strong>. Press <strong>Space</strong> to scoop the child.</p>
+        <div class="hud">
+          <span id="score">Score: 0</span>
+          <span id="state">Child on kayak</span>
+          <a href="index.html">Back to Soundboard</a>
+        </div>
+      </header>
+      <canvas id="gameCanvas" width="1100" height="650" aria-label="River rescue game canvas"></canvas>
+    </main>
+    <script src="game.js"></script>
+  </body>
+</html>
