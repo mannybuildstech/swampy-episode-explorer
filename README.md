@@ -8,7 +8,7 @@ A map-first explorer for **Swampy Stories** episodes in real Florida locations.
 - Extracts artwork + descriptions from each feed item.
 - Uses manually verified episode-to-location mappings for all current episodes.
 - Places episodes on a zoomable/pannable Leaflet map with artwork-based pins.
-- Keeps the episode list pane hidden by default (toggle to show/hide).
+- Includes a "River Rescue Prototype" mini-game page linked from the header.
 
 ## Run locally
 
