@@ -261,13 +261,28 @@ async function loadEpisodes() {
         if (seenTitles.has(normalizedTitle)) return null;
         seenTitles.add(normalizedTitle);
 
-        const { location } = resolveEpisodeLocation(title);
-        if (!location) return null;
-
         const rawDescription = item.getElementsByTagName('description')[0]?.textContent || '';
         const contentEncoded = item.getElementsByTagName('content:encoded')[0]?.textContent || '';
         const summary = item.getElementsByTagName('itunes:summary')[0]?.textContent || '';
         const parsedLocation = parseBasedOnLocation(rawDescription, contentEncoded, summary);
+        console.log('[Swampy] Parsed episode metadata', {
+          title,
+          parsedLocation,
+          hasDescription: Boolean(rawDescription),
+          hasContentEncoded: Boolean(contentEncoded),
+          hasSummary: Boolean(summary)
+        });
+
+        const { location } = resolveEpisodeLocation(title);
+        if (!location) {
+          console.log('[Swampy] Episode missing manual map coordinates, skipping marker', {
+            title,
+            normalizedTitle,
+            parsedLocation
+          });
+          return null;
+        }
+
         const links = extractPlatformLinks(item, [rawDescription, contentEncoded, summary].join(' '));
         const description = textFromHtml(rawDescription).slice(0, 320);
 
