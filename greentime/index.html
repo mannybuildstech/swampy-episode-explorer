@@ -5,37 +5,47 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta
       name="description"
-      content="Simple tools to make family time in nature more adventurous."
+      content="A modern family roadtrip-style landing page for turning screen time into green time."
     />
     <title>Turn Screen Time into Green Time</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
     <header class="hero">
-      <div class="container">
-        <!--
-          QR CODE PLACEMENT (optional):
-          Drop your QR image here later, for example:
-          <img src="qr-greentime.png" alt="QR code for Green Time page" class="qr-code" />
-        -->
-        <p class="eyebrow">🌿 Family Adventure Starter</p>
-        <h1>Turn Screen Time into Green Time</h1>
-        <p class="subtitle">
-          Simple tools to make family time in nature more adventurous.
-        </p>
-        <p class="intro">
-          Pick a place, hype up the adventure, and explore together.
-        </p>
+      <div class="container hero-layout">
+        <div class="hero-copy">
+          <p class="eyebrow">🌿 Family Adventure Starter</p>
+          <h1>Turn Screen Time into Green Time</h1>
+          <p class="subtitle">
+            Plan a simple weekend roadtrip where each stop gets kids moving,
+            noticing nature, and making memories together.
+          </p>
+          <a class="button button-large" href="#roadtrip">Start the roadtrip plan</a>
+        </div>
+
+        <aside class="trip-card" aria-label="Roadtrip plan quick summary">
+          <p class="trip-label">Roadtrip Blueprint</p>
+          <ol>
+            <li>Pick your park or trail.</li>
+            <li>Build hype with a story before you go.</li>
+            <li>Turn the walk into a discovery mission.</li>
+            <li>Close the day with birds, stars, and wonder.</li>
+          </ol>
+        </aside>
       </div>
     </header>
 
     <main>
-      <section class="apps" aria-labelledby="apps-heading">
+      <section id="roadtrip" class="apps" aria-labelledby="apps-heading">
         <div class="container">
-          <h2 id="apps-heading">Build Your Outdoor Adventure</h2>
+          <h2 id="apps-heading">Your Roadtrip Stops</h2>
+          <p class="section-intro">
+            Tap any stop to open the app and bring the activity to life.
+          </p>
 
           <ul class="app-list">
-            <li class="app-card">
+            <li class="app-card" style="--card-image: url('https://images.unsplash.com/photo-1541963463532-d68292c34b19?auto=format&fit=crop&w=1200&q=80')">
+              <p class="stop-tag">Stop 01 · Route Planning</p>
               <h3>AllTrails</h3>
               <p>
                 Pick a nearby trail or park that fits your family — from easy
@@ -54,7 +64,8 @@
               >
             </li>
 
-            <li class="app-card">
+            <li class="app-card" style="--card-image: url('https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=1200&q=80')">
+              <p class="stop-tag">Stop 02 · Pre-Trip Story</p>
               <h3>Swampy Stories Explorer</h3>
               <p>
                 Get kids excited before you go — listen to a story about the
@@ -73,7 +84,8 @@
               >
             </li>
 
-            <li class="app-card">
+            <li class="app-card" style="--card-image: url('https://images.unsplash.com/photo-1472396961693-142e6e269027?auto=format&fit=crop&w=1200&q=80')">
+              <p class="stop-tag">Stop 03 · Wildlife Hunt</p>
               <h3>Seek by iNaturalist</h3>
               <p>
                 Discover plants, bugs, and animals — turn your walk into a
@@ -92,7 +104,8 @@
               >
             </li>
 
-            <li class="app-card">
+            <li class="app-card" style="--card-image: url('https://images.unsplash.com/photo-1444464666168-49d633b86797?auto=format&fit=crop&w=1200&q=80')">
+              <p class="stop-tag">Stop 04 · Sound Safari</p>
               <h3>Merlin Bird ID</h3>
               <p>
                 Listen and identify birds around you — like a real-life Pokédex
@@ -111,7 +124,8 @@
               >
             </li>
 
-            <li class="app-card">
+            <li class="app-card" style="--card-image: url('https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=1200&q=80')">
+              <p class="stop-tag">Stop 05 · Treasure Mission</p>
               <h3>Geocaching</h3>
               <p>
                 Add a mission to your walk — search for hidden treasures along
@@ -130,7 +144,8 @@
               >
             </li>
 
-            <li class="app-card">
+            <li class="app-card" style="--card-image: url('https://images.unsplash.com/photo-1419242902214-272b3f66ee7a?auto=format&fit=crop&w=1200&q=80')">
+              <p class="stop-tag">Stop 06 · Stargazing Finale</p>
               <h3>Google Sky Map</h3>
               <p>
                 End the day by exploring the night sky — discover stars and
@@ -155,11 +170,13 @@
       <section class="cta" aria-labelledby="cta-heading">
         <div class="container">
           <h2 id="cta-heading">Make It a Weekend Adventure</h2>
-          <p class="cta-lines">Pick a place.<br />Take a short road trip.<br />Explore together.</p>
-          <p>Share your adventure and tag <strong>#swampystories</strong></p>
+          <p class="cta-lines">
+            Pick a place. Pack snacks. Hit the road. Explore together.
+          </p>
+          <p>Share your family roadtrip and tag <strong>#swampystories</strong>.</p>
           <p>
-            If you're interested, Manny can turn your outdoor adventure into an
-            audio drama version.
+            Want a magical ending? Manny can turn your real outing into an
+            audio drama keepsake.
           </p>
         </div>
       </section>
