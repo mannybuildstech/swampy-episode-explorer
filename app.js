@@ -304,50 +304,28 @@ async function loadEpisodes() {
       const contentEncoded = item.getElementsByTagName('content:encoded')[0]?.textContent || '';
       const summary = item.getElementsByTagName('itunes:summary')[0]?.textContent || '';
       const parsedLocation = parseBasedOnLocation(rawDescription, contentEncoded, summary);
-      console.log('[Swampy] Parsed episode metadata', {
-        title,
-        parsedLocation,
-        hasDescription: Boolean(rawDescription),
-        hasContentEncoded: Boolean(contentEncoded),
-        hasSummary: Boolean(summary)
-      });
 
-        const rawDescription = item.getElementsByTagName('description')[0]?.textContent || '';
-        const contentEncoded = item.getElementsByTagName('content:encoded')[0]?.textContent || '';
-        const summary = item.getElementsByTagName('itunes:summary')[0]?.textContent || '';
-        const parsedLocation = parseBasedOnLocation(rawDescription, contentEncoded, summary);
-        console.log('[Swampy] Parsed episode metadata', {
-          title,
-          parsedLocation,
-          hasDescription: Boolean(rawDescription),
-          hasContentEncoded: Boolean(contentEncoded),
-          hasSummary: Boolean(summary)
-        });
+      const { location } = resolveEpisodeLocation(title);
+      const place = parsedLocation?.place || location?.place || '';
+      const address = parsedLocation?.address || parsedLocation?.place || location?.place || '';
 
-        const { location } = resolveEpisodeLocation(title);
-        if (!location) {
-          console.log('[Swampy] Episode missing manual map coordinates, skipping marker', {
-            title,
-            normalizedTitle,
-            parsedLocation
-          });
-          return null;
-        }
+      let coords = location?.coords || null;
+      if (!coords && address) {
+        coords = await geocodeLocation(address);
+      }
 
-        const links = extractPlatformLinks(item, [rawDescription, contentEncoded, summary].join(' '));
-        const description = textFromHtml(rawDescription).slice(0, 320);
-
-      if (!coords) {
-        console.log('[Swampy] Episode missing coordinates after geocoding, skipping marker', {
+      if (!coords || !place) {
+        console.log('[Swampy] Episode missing map coordinates, skipping marker', {
           title,
           normalizedTitle,
-          parsedLocation
+          parsedLocation,
+          hasManualLocation: Boolean(location)
         });
         continue;
       }
 
       const links = extractPlatformLinks(item, [rawDescription, contentEncoded, summary].join(' '));
-      const description = textFromHtml(rawDescription).slice(0, 320);
+      const description = textFromHtml(rawDescription || summary).slice(0, 320);
 
       episodes.push({
         title,
@@ -378,12 +356,14 @@ async function loadEpisodes() {
       map.fitBounds(group.getBounds().pad(0.2));
     }
 
-    statusEl.textContent = '';
-    console.log(`[Swampy] Loaded ${episodes.length} mapped episodes.`);
+    statusEl.textContent = markers.length
+      ? `Loaded ${episodes.length} mapped episode${episodes.length === 1 ? '' : 's'}.`
+      : 'No episodes could be mapped right now.';
   } catch (error) {
     console.error(error);
     statusEl.textContent = `Failed to load feed: ${error.message}`;
   }
 }
+
 
 loadEpisodes();

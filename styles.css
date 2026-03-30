@@ -152,3 +152,24 @@ main {
     margin: 10px 12px;
   }
 }
+
+
+@media (max-width: 640px) {
+  .game-nav-button {
+    width: 100%;
+    text-align: center;
+  }
+
+  main {
+    min-height: calc(100dvh - 96px);
+  }
+
+  .popup-card {
+    padding: 0.55rem;
+  }
+
+  .popup-button {
+    flex: 1 1 100%;
+    text-align: center;
+  }
+}
