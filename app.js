@@ -229,6 +229,17 @@ function clearMarkers() {
   markers = [];
 }
 
+function uniqueManualLocations() {
+  const seen = new Set();
+
+  return Object.values(manualEpisodeLocations).filter(location => {
+    const key = `${location.place}|${location.coords.join(',')}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
 function escapeHtml(value = '') {
   return value
     .replaceAll('&', '&amp;')
@@ -282,8 +293,32 @@ async function fetchXml() {
 }
 
 async function loadEpisodes() {
-  statusEl.textContent = 'Loading episodes…';
   clearMarkers();
+  const placeholderLocations = uniqueManualLocations();
+  placeholderLocations.forEach(location => {
+    const marker = L.marker(location.coords, { icon: imageIcon(fallbackImage) }).addTo(map);
+    marker.bindPopup(
+      buildPopupContent({
+        title: 'Loading episode…',
+        place: location.place,
+        address: location.place,
+        description: 'Episode details are loading. Tap again in a moment for full info.',
+        preferredUrl: ''
+      }),
+      {
+        maxWidth: 300,
+        className: 'episode-popup'
+      }
+    );
+    markers.push(marker);
+  });
+
+  statusEl.textContent = `Map loaded with ${placeholderLocations.length} locations. Loading episode details…`;
+
+  if (markers.length) {
+    const group = L.featureGroup(markers);
+    map.fitBounds(group.getBounds().pad(0.2));
+  }
 
   try {
     const xml = await fetchXml();
@@ -341,6 +376,8 @@ async function loadEpisodes() {
         })
       });
     }
+
+    clearMarkers();
 
     for (const episode of episodes) {
       const marker = L.marker(episode.coords, { icon: imageIcon(episode.image) }).addTo(map);
