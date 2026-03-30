@@ -312,16 +312,30 @@ async function loadEpisodes() {
         hasSummary: Boolean(summary)
       });
 
-      const { location } = resolveEpisodeLocation(title);
-      let coords = location?.coords || null;
-      const place = parsedLocation?.place || location?.place || '';
-      const address = parsedLocation?.address || location?.place || '';
+        const rawDescription = item.getElementsByTagName('description')[0]?.textContent || '';
+        const contentEncoded = item.getElementsByTagName('content:encoded')[0]?.textContent || '';
+        const summary = item.getElementsByTagName('itunes:summary')[0]?.textContent || '';
+        const parsedLocation = parseBasedOnLocation(rawDescription, contentEncoded, summary);
+        console.log('[Swampy] Parsed episode metadata', {
+          title,
+          parsedLocation,
+          hasDescription: Boolean(rawDescription),
+          hasContentEncoded: Boolean(contentEncoded),
+          hasSummary: Boolean(summary)
+        });
 
-      if (!coords && (address || place)) {
-        const geocodeQuery = address || place;
-        console.log('[Swampy] Geocoding episode location', { title, geocodeQuery });
-        coords = await geocodeLocation(geocodeQuery);
-      }
+        const { location } = resolveEpisodeLocation(title);
+        if (!location) {
+          console.log('[Swampy] Episode missing manual map coordinates, skipping marker', {
+            title,
+            normalizedTitle,
+            parsedLocation
+          });
+          return null;
+        }
+
+        const links = extractPlatformLinks(item, [rawDescription, contentEncoded, summary].join(' '));
+        const description = textFromHtml(rawDescription).slice(0, 320);
 
       if (!coords) {
         console.log('[Swampy] Episode missing coordinates after geocoding, skipping marker', {
