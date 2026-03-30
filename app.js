@@ -31,6 +31,7 @@ const manualEpisodeLocations = {
 
 const fallbackImage = 'https://placehold.co/300x300?text=Swampy+Stories';
 let markers = [];
+const geocodeCache = new Map();
 
 function textFromHtml(html = '') {
   const parser = new DOMParser();
@@ -132,6 +133,43 @@ function preferredMapsUrl(addressOrPlace) {
   const query = encodeURIComponent(addressOrPlace);
   if (isAppleDevice()) return `https://maps.apple.com/?q=${query}`;
   return `https://www.google.com/maps/search/?api=1&query=${query}`;
+}
+
+async function geocodeLocation(addressOrPlace) {
+  const query = (addressOrPlace || '').trim();
+  if (!query) return null;
+
+  if (geocodeCache.has(query)) return geocodeCache.get(query);
+
+  const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&q=${encodeURIComponent(query)}`;
+
+  try {
+    const response = await fetch(url, {
+      headers: {
+        Accept: 'application/json'
+      }
+    });
+    if (!response.ok) {
+      console.warn('[Swampy] Geocoding failed', { query, status: response.status });
+      geocodeCache.set(query, null);
+      return null;
+    }
+
+    const result = await response.json();
+    const top = Array.isArray(result) ? result[0] : null;
+    if (!top?.lat || !top?.lon) {
+      geocodeCache.set(query, null);
+      return null;
+    }
+
+    const coords = [Number(top.lat), Number(top.lon)];
+    geocodeCache.set(query, coords);
+    return coords;
+  } catch (error) {
+    console.warn('[Swampy] Geocoding error', { query, error });
+    geocodeCache.set(query, null);
+    return null;
+  }
 }
 
 function extractImage(item) {
@@ -253,39 +291,64 @@ async function loadEpisodes() {
     const items = [...doc.getElementsByTagName('item')];
     const seenTitles = new Set();
 
-    const episodes = items
-      .map(item => {
-        const title = item.getElementsByTagName('title')[0]?.textContent?.trim() || 'Untitled';
-        const normalizedTitle = normalizeTitle(title);
+    const episodes = [];
 
-        if (seenTitles.has(normalizedTitle)) return null;
-        seenTitles.add(normalizedTitle);
+    for (const item of items) {
+      const title = item.getElementsByTagName('title')[0]?.textContent?.trim() || 'Untitled';
+      const normalizedTitle = normalizeTitle(title);
 
-        const { location } = resolveEpisodeLocation(title);
-        if (!location) return null;
+      if (seenTitles.has(normalizedTitle)) continue;
+      seenTitles.add(normalizedTitle);
 
-        const rawDescription = item.getElementsByTagName('description')[0]?.textContent || '';
-        const contentEncoded = item.getElementsByTagName('content:encoded')[0]?.textContent || '';
-        const summary = item.getElementsByTagName('itunes:summary')[0]?.textContent || '';
-        const parsedLocation = parseBasedOnLocation(rawDescription, contentEncoded, summary);
-        const links = extractPlatformLinks(item, [rawDescription, contentEncoded, summary].join(' '));
-        const description = textFromHtml(rawDescription).slice(0, 320);
+      const rawDescription = item.getElementsByTagName('description')[0]?.textContent || '';
+      const contentEncoded = item.getElementsByTagName('content:encoded')[0]?.textContent || '';
+      const summary = item.getElementsByTagName('itunes:summary')[0]?.textContent || '';
+      const parsedLocation = parseBasedOnLocation(rawDescription, contentEncoded, summary);
+      console.log('[Swampy] Parsed episode metadata', {
+        title,
+        parsedLocation,
+        hasDescription: Boolean(rawDescription),
+        hasContentEncoded: Boolean(contentEncoded),
+        hasSummary: Boolean(summary)
+      });
 
-        return {
+      const { location } = resolveEpisodeLocation(title);
+      let coords = location?.coords || null;
+      const place = parsedLocation?.place || location?.place || '';
+      const address = parsedLocation?.address || location?.place || '';
+
+      if (!coords && (address || place)) {
+        const geocodeQuery = address || place;
+        console.log('[Swampy] Geocoding episode location', { title, geocodeQuery });
+        coords = await geocodeLocation(geocodeQuery);
+      }
+
+      if (!coords) {
+        console.log('[Swampy] Episode missing coordinates after geocoding, skipping marker', {
           title,
-          description,
-          image: extractImage(item),
-          place: parsedLocation?.place || location.place,
-          address: parsedLocation?.address || location.place,
-          coords: location.coords,
-          preferredUrl: preferredEpisodeUrl({
-            appleUrl: links.apple,
-            spotifyUrl: links.spotify,
-            fallbackUrl: links.fallback
-          })
-        };
-      })
-      .filter(Boolean);
+          normalizedTitle,
+          parsedLocation
+        });
+        continue;
+      }
+
+      const links = extractPlatformLinks(item, [rawDescription, contentEncoded, summary].join(' '));
+      const description = textFromHtml(rawDescription).slice(0, 320);
+
+      episodes.push({
+        title,
+        description,
+        image: extractImage(item),
+        place,
+        address,
+        coords,
+        preferredUrl: preferredEpisodeUrl({
+          appleUrl: links.apple,
+          spotifyUrl: links.spotify,
+          fallbackUrl: links.fallback
+        })
+      });
+    }
 
     for (const episode of episodes) {
       const marker = L.marker(episode.coords, { icon: imageIcon(episode.image) }).addTo(map);
