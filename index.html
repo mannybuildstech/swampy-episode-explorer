@@ -19,6 +19,14 @@
     </header>
 
     <main>
+      <p id="status">Loading episodes…</p>
+      <section class="soundboard" aria-label="Scene and character soundboard">
+        <div class="category-row" id="categoryRow" role="tablist" aria-label="Scenes"></div>
+        <div class="character-stage" id="characterStage" aria-live="polite">
+          <p class="stage-label">Tap a character to hear their sound</p>
+          <div class="character-row" id="characterRow"></div>
+        </div>
+      </section>
       <div id="map"></div>
     </main>
 
