@@ -14,7 +14,7 @@
   </head>
   <body>
     <header>
-      <h1>Episode Explorer</h1>
+      <h1>Looking for a Florida adventure? Get inspired by real family stories before you visit.</h1>
       <a class="game-nav-button" href="https://swampystories.com" target="_blank" rel="noopener noreferrer">Listen</a>
     </header>
 
@@ -29,6 +29,11 @@
       </section>
       <div id="map"></div>
     </main>
+
+    <div id="episode-image-modal" class="image-modal" aria-hidden="true">
+      <button id="image-modal-close" class="image-modal-close" aria-label="Close image viewer">×</button>
+      <img id="image-modal-photo" class="image-modal-photo" alt="Episode artwork" />
+    </div>
 
     <script
       src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
