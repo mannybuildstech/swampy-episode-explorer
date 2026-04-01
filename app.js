@@ -1,40 +1,5 @@
 const FEED_URL = 'https://feed.podbean.com/swampystories/feed.xml';
 
-const statusEl = document.getElementById('status');
-const categoryRowEl = document.getElementById('categoryRow');
-const characterRowEl = document.getElementById('characterRow');
-const characterStageEl = document.getElementById('characterStage');
-
-const scenes = [
-  {
-    id: 'spring',
-    name: 'Spring',
-    background: 'linear-gradient(180deg, rgba(59, 130, 246, 0.35), rgba(15, 23, 42, 0.65))',
-    characters: ['🐸', '🦆', '🐢', '🦫']
-  },
-  {
-    id: 'mangrove',
-    name: 'Mangrove',
-    background: 'linear-gradient(180deg, rgba(74, 222, 128, 0.35), rgba(15, 23, 42, 0.7))',
-    characters: ['🐊', '🦀', '🐦', '🦎']
-  },
-  {
-    id: 'night',
-    name: 'Night',
-    background: 'linear-gradient(180deg, rgba(129, 140, 248, 0.35), rgba(2, 6, 23, 0.78))',
-    characters: ['🦉', '🦝', '🦇', '🐸']
-  },
-  {
-    id: 'beach',
-    name: 'Beach',
-    background: 'linear-gradient(180deg, rgba(56, 189, 248, 0.35), rgba(15, 23, 42, 0.68))',
-    characters: ['🦩', '🦀', '🐬', '🐢']
-  }
-];
-
-let selectedSceneId = scenes[0].id;
-let audioContext;
-
 const map = L.map('map', {
   zoomControl: true,
   minZoom: 6,
@@ -166,108 +131,6 @@ function preferredMapsUrl(addressOrPlace) {
   const query = encodeURIComponent(addressOrPlace);
   if (isAppleDevice()) return `https://maps.apple.com/?q=${query}`;
   return `https://www.google.com/maps/search/?api=1&query=${query}`;
-}
-
-function getAudioContext() {
-  if (!audioContext) {
-    audioContext = new (window.AudioContext || window.webkitAudioContext)();
-  }
-  return audioContext;
-}
-
-function playEmojiSound(emoji) {
-  const ctx = getAudioContext();
-  const now = ctx.currentTime;
-  const osc = ctx.createOscillator();
-  const gain = ctx.createGain();
-  const filter = ctx.createBiquadFilter();
-
-  const pitchByEmoji = {
-    '🐸': 260,
-    '🦆': 320,
-    '🐢': 190,
-    '🦫': 220,
-    '🐊': 140,
-    '🦀': 240,
-    '🐦': 460,
-    '🦎': 300,
-    '🦉': 210,
-    '🦝': 175,
-    '🦇': 420,
-    '🦩': 360,
-    '🐬': 520
-  };
-
-  const base = pitchByEmoji[emoji] || 280;
-  osc.type = base > 350 ? 'triangle' : 'sine';
-  osc.frequency.setValueAtTime(base, now);
-  osc.frequency.exponentialRampToValueAtTime(base * 1.13, now + 0.09);
-  osc.frequency.exponentialRampToValueAtTime(base * 0.82, now + 0.24);
-
-  filter.type = 'lowpass';
-  filter.frequency.setValueAtTime(Math.max(600, base * 4.5), now);
-
-  gain.gain.setValueAtTime(0.0001, now);
-  gain.gain.exponentialRampToValueAtTime(0.16, now + 0.03);
-  gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.26);
-
-  osc.connect(filter);
-  filter.connect(gain);
-  gain.connect(ctx.destination);
-  osc.start(now);
-  osc.stop(now + 0.28);
-}
-
-function renderCharacters(scene) {
-  characterRowEl.innerHTML = '';
-  characterStageEl.style.background = scene.background;
-
-  scene.characters.forEach(emoji => {
-    const actor = document.createElement('span');
-    actor.className = 'character-emoji';
-    actor.textContent = emoji;
-    actor.role = 'button';
-    actor.tabIndex = 0;
-    actor.setAttribute('aria-label', `Play ${emoji} sound`);
-
-    const activate = () => {
-      playEmojiSound(emoji);
-      actor.classList.add('active');
-      setTimeout(() => actor.classList.remove('active'), 250);
-    };
-
-    actor.addEventListener('click', activate);
-    actor.addEventListener('keydown', event => {
-      if (event.key === 'Enter' || event.key === ' ') {
-        event.preventDefault();
-        activate();
-      }
-    });
-    characterRowEl.append(actor);
-  });
-}
-
-function renderScenes() {
-  categoryRowEl.innerHTML = '';
-
-  scenes.forEach(scene => {
-    const chip = document.createElement('button');
-    chip.className = 'category-chip';
-    chip.textContent = scene.name;
-    chip.type = 'button';
-    if (scene.id === selectedSceneId) chip.classList.add('active');
-
-    chip.addEventListener('click', () => {
-      selectedSceneId = scene.id;
-      renderScenes();
-      renderCharacters(scene);
-    });
-
-    categoryRowEl.append(chip);
-  });
-
-  const selectedScene = scenes.find(scene => scene.id === selectedSceneId) || scenes[0];
-  renderCharacters(selectedScene);
 }
 
 async function geocodeLocation(addressOrPlace) {
@@ -448,8 +311,6 @@ async function loadEpisodes() {
     markers.push(marker);
   });
 
-  statusEl.textContent = `Map loaded with ${placeholderLocations.length} locations. Loading episode details…`;
-
   if (markers.length) {
     const group = L.featureGroup(markers);
     map.fitBounds(group.getBounds().pad(0.2));
@@ -528,15 +389,10 @@ async function loadEpisodes() {
       map.fitBounds(group.getBounds().pad(0.2));
     }
 
-    statusEl.textContent = markers.length
-      ? `Loaded ${episodes.length} mapped episode${episodes.length === 1 ? '' : 's'}.`
-      : 'No episodes could be mapped right now.';
   } catch (error) {
     console.error(error);
-    statusEl.textContent = `Failed to load feed: ${error.message}`;
   }
 }
 
 
 loadEpisodes();
-renderScenes();
