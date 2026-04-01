@@ -26,8 +26,9 @@ header {
 
 header h1 {
   margin: 0;
-  font-size: clamp(1.1rem, 4.5vw, 1.4rem);
+  font-size: clamp(1rem, 3.8vw, 1.25rem);
   text-align: center;
+  max-width: 900px;
 }
 
 .game-nav-button {
@@ -47,18 +48,6 @@ header h1 {
 
 main {
   min-height: calc(100dvh - 62px);
-  display: grid;
-  grid-template-rows: auto 1fr;
-}
-
-#status {
-  margin: 0;
-  padding: 0.55rem 0.8rem;
-  font-size: 0.88rem;
-  color: #bfdbfe;
-  background: #020617;
-  border-bottom: 1px solid #1f2937;
-  min-height: 2.2rem;
 }
 
 #map {
@@ -95,6 +84,16 @@ main {
   font-size: 1rem;
 }
 
+.popup-art {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  border-radius: 0.45rem;
+  margin-bottom: 0.55rem;
+  cursor: zoom-in;
+  border: 1px solid #334155;
+}
+
 .popup-location {
   margin: 0.35rem 0;
   color: #86efac;
@@ -126,26 +125,53 @@ main {
   border: 1px solid transparent;
 }
 
-.popup-button-primary {
-  background: #2563eb;
-  color: #eff6ff;
-  border-color: #3b82f6;
-}
-
 .popup-button-secondary {
   background: #0f172a;
   color: #cbd5e1;
   border-color: #475569;
 }
 
+.image-modal {
+  position: fixed;
+  inset: 0;
+  display: none;
+  justify-content: center;
+  align-items: center;
+  background: rgba(2, 6, 23, 0.95);
+  padding: 1rem;
+  z-index: 2500;
+}
+
+.image-modal.is-visible {
+  display: flex;
+}
+
+.image-modal-photo {
+  max-width: min(100vw - 2rem, 1100px);
+  max-height: calc(100dvh - 2rem);
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  border-radius: 0.6rem;
+}
+
+.image-modal-close {
+  position: absolute;
+  top: 0.8rem;
+  right: 0.8rem;
+  width: 2.4rem;
+  height: 2.4rem;
+  border: 1px solid #64748b;
+  border-radius: 999px;
+  background: #0f172a;
+  color: #f8fafc;
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+
 @media (max-width: 640px) {
   header {
     padding: 0.65rem 0.85rem;
-  }
-
-  #status {
-    padding: 0.5rem 0.65rem;
-    font-size: 0.8rem;
   }
 
   .leaflet-popup-content {

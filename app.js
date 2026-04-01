@@ -1,6 +1,9 @@
 const FEED_URL = 'https://feed.podbean.com/swampystories/feed.xml';
 
 const statusEl = document.getElementById('status');
+const imageModalEl = document.getElementById('episode-image-modal');
+const imageModalPhotoEl = document.getElementById('image-modal-photo');
+const imageModalCloseEl = document.getElementById('image-modal-close');
 
 const map = L.map('map', {
   zoomControl: true,
@@ -259,6 +262,38 @@ function imageIcon(imageUrl) {
   });
 }
 
+function updateStatus(message) {
+  if (statusEl) statusEl.textContent = message;
+}
+
+function closeImageModal() {
+  if (!imageModalEl) return;
+  imageModalEl.classList.remove('is-visible');
+  imageModalEl.setAttribute('aria-hidden', 'true');
+}
+
+function openImageModal(imageUrl, altText) {
+  if (!imageModalEl || !imageModalPhotoEl || !imageUrl) return;
+  imageModalPhotoEl.src = imageUrl;
+  imageModalPhotoEl.alt = altText || 'Episode artwork';
+  imageModalEl.classList.add('is-visible');
+  imageModalEl.setAttribute('aria-hidden', 'false');
+}
+
+if (imageModalCloseEl) {
+  imageModalCloseEl.addEventListener('click', closeImageModal);
+}
+
+if (imageModalEl) {
+  imageModalEl.addEventListener('click', event => {
+    if (event.target === imageModalEl) closeImageModal();
+  });
+}
+
+document.addEventListener('keydown', event => {
+  if (event.key === 'Escape') closeImageModal();
+});
+
 function buildPopupContent(episode) {
   const safeTitle = escapeHtml(episode.title);
   const safePlace = escapeHtml(episode.place);
@@ -268,11 +303,12 @@ function buildPopupContent(episode) {
 
   return `
     <article class="popup-card">
+      <img class="popup-art" src="${escapeHtml(episode.image || fallbackImage)}" alt="${safeTitle}" />
       <h3>${safeTitle}</h3>
       <p class="popup-location">📍 ${safePlace}</p>
       <p class="popup-description">${safeDescription}</p>
       <div class="popup-actions">
-        ${safeEpisodeUrl ? `<a class="popup-button popup-button-primary" href="${safeEpisodeUrl}" target="_blank" rel="noopener noreferrer">Open Episode</a>` : ''}
+        ${safeEpisodeUrl ? `<a class="popup-button popup-button-secondary" href="${safeEpisodeUrl}" target="_blank" rel="noopener noreferrer">Open Episode</a>` : ''}
         <a class="popup-button popup-button-secondary" href="${safeMapsUrl}" target="_blank" rel="noopener noreferrer">Visit Park</a>
       </div>
     </article>
@@ -297,6 +333,7 @@ async function loadEpisodes() {
   const placeholderLocations = uniqueManualLocations();
   placeholderLocations.forEach(location => {
     const marker = L.marker(location.coords, { icon: imageIcon(fallbackImage) }).addTo(map);
+    marker.episodeData = { image: fallbackImage, title: 'Loading episode artwork' };
     marker.bindPopup(
       buildPopupContent({
         title: 'Loading episode…',
@@ -313,7 +350,7 @@ async function loadEpisodes() {
     markers.push(marker);
   });
 
-  statusEl.textContent = `Map loaded with ${placeholderLocations.length} locations. Loading episode details…`;
+  updateStatus(`Map loaded with ${placeholderLocations.length} locations. Loading episode details…`);
 
   if (markers.length) {
     const group = L.featureGroup(markers);
@@ -381,10 +418,12 @@ async function loadEpisodes() {
 
     for (const episode of episodes) {
       const marker = L.marker(episode.coords, { icon: imageIcon(episode.image) }).addTo(map);
+      marker.episodeData = episode;
       marker.bindPopup(buildPopupContent(episode), {
         maxWidth: 300,
         className: 'episode-popup'
       });
+      marker.on('click', () => openImageModal(episode.image, episode.title));
       markers.push(marker);
     }
 
@@ -393,14 +432,27 @@ async function loadEpisodes() {
       map.fitBounds(group.getBounds().pad(0.2));
     }
 
-    statusEl.textContent = markers.length
+    updateStatus(markers.length
       ? `Loaded ${episodes.length} mapped episode${episodes.length === 1 ? '' : 's'}.`
-      : 'No episodes could be mapped right now.';
+      : 'No episodes could be mapped right now.');
   } catch (error) {
     console.error(error);
-    statusEl.textContent = `Failed to load feed: ${error.message}`;
+    updateStatus(`Failed to load feed: ${error.message}`);
   }
 }
 
 
 loadEpisodes();
+
+map.on('popupopen', event => {
+  const marker = event.popup?._source;
+  const episode = marker?.episodeData;
+  if (!episode?.image) return;
+
+  const popupNode = event.popup.getElement();
+  const popupImage = popupNode?.querySelector('.popup-art');
+
+  if (popupImage) {
+    popupImage.addEventListener('click', () => openImageModal(episode.image, episode.title), { once: true });
+  }
+});
